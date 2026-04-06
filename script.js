@@ -37,13 +37,19 @@ document.getElementById(‘auth-switch-link’).innerText = isLoginMode ? “С�
 }
 
 async function handleAuth() {
-const e = document.getElementById(‘email’).value.trim(), p = document.getElementById(‘pass’).value.trim();
-if (!e || !p) return alert(“Заповни всі поля, будь ласка”);
-try {
-if (isLoginMode) await auth.signInWithEmailAndPassword(e, p);
-else await auth.createUserWithEmailAndPassword(e, p);
-} catch (err) { alert(err.message); }
+    const e = document.getElementById('email').value.trim(), 
+          p = document.getElementById('pass').value.trim();
+    if (!e || !p) return alert("Заповни всі поля, будь ласка");
+    try {
+        alert("Спроба входу...");
+        if (isLoginMode) await auth.signInWithEmailAndPassword(e, p); 
+        else await auth.createUserWithEmailAndPassword(e, p);
+        alert("Успішно!");
+    } catch (err) { 
+        alert("Помилка: " + err.message); 
+    }
 }
+
 
 function logout() { auth.signOut(); }
 

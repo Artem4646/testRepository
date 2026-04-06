@@ -35,7 +35,7 @@ body.light-theme {
 }
 
 * {
-    box-sizing: border-box;
+    box-sizing: border-box; /* Фікс: тепер відступи входять у висоту 100% */
     margin: 0;
     padding: 0;
     font-family: var(--font);
@@ -50,6 +50,7 @@ body {
     color: var(--text);
     padding-bottom: 120px;
     min-height: 100vh;
+    min-height: 100dvh;
     transition: background 0.4s, color 0.4s;
     overflow-x: hidden;
     letter-spacing: -0.01em;
@@ -151,12 +152,23 @@ body.light-theme .nav-btn.active {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 80px 20px 120px; /* Збільшено padding зверху, щоб не закривався хедером */
     animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1),
                slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    min-height: 100vh;
 }
 
-.screen.active { display: block; }
+/* Фікс для екрана авторизації, щоб не був як два екрани */
+#scr-auth {
+    padding: 20px !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+#scr-auth.active { display: flex; flex-direction: column; }
 
 @keyframes slideUp {
     from { transform: translateY(20px); }
@@ -175,9 +187,9 @@ body.light-theme .nav-btn.active {
     align-items: center;
 }
 
-.input-group { margin-bottom: 15px; }
+.input-group { margin-bottom: 15px; width: 100%; }
 
-.input-ans {
+.input-ans, input[type="email"], input[type="password"] {
     width: 100%;
     padding: 16px 20px;
     border-radius: var(--radius-md);
@@ -191,7 +203,7 @@ body.light-theme .nav-btn.active {
     margin-bottom: 15px;
 }
 
-.input-ans:focus {
+.input-ans:focus, input:focus {
     border-color: var(--accent-solid);
     background: var(--surface-h);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -512,25 +524,26 @@ body.light-theme .card-back { color: black; }
 
 .flip-btns .btn-main { flex: 1; }
 
+/* Фікс кнопки голосу: тепер вона у потоці або правильно позиціонована */
 .btn-icon.voice-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 15px;
+    right: 15px;
     font-size: 1.2rem;
     cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    background-color: rgba(255, 255, 255, 0.2);
-    width: 40px;
-    height: 40px;
-    display: inline-flex;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 44px;
+    height: 44px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    vertical-align: middle;
+    z-index: 10;
 }
 
 body.light-theme .btn-icon.voice-btn {
-    border: 2px solid rgba(0, 0, 0, 0.3);
-    background-color: rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .btn-main.wrong-btn {
@@ -549,7 +562,7 @@ body.light-theme .btn-icon.voice-btn {
 
     #scr-study #study-area { padding-bottom: 80px; }
 
-    .card-scene { height: 250px; }
+    .card-scene { height: 280px; }
 
     .nav-btn { padding: 8px 0px; }
 }
@@ -558,3 +571,4 @@ body.light-theme .btn-icon.voice-btn {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface-h); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+

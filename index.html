@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FlashCloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+          rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c8f04c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered!', reg))
+            .catch(err => console.log('SW registration failed!', err));
+        });
+      }
+    </script>
+</head>
+
+<body>
+
+<div id="modal-overlay">
+    <div class="modal">
+        <h3 id="m-title"></h3>
+        <p id="m-body"></p>
+        <div id="m-content"></div>
+        <div id="m-btns" style="display:flex; gap:10px; margin-top:25px;"></div>
+    </div>
+</div>
+
+<header>
+    <div class="logo">FLASH</div>
+    <div style="display:flex; gap:10px">
+        <button class="btn-icon" onclick="toggleTheme()"><i class="ph-duotone ph-moon-stars">🌓</i></button>
+        <button id="logout-btn" class="btn-icon btn-danger" style="display:none" onclick="auth.signOut()"><i
+                class="ph-bold ph-sign-out">🚪</i></button>
+    </div>
+</header>
+
+<!-- AUTH SCREEN -->
+<div id="scr-auth" class="screen active">
+    <div style="text-align:center; padding-top:40px; max-width: 360px; margin: 0 auto;">
+        <span>👋</span>
+        <h2 id="auth-title">З поверненням!</h2>
+        <p style="margin-bottom: 30px;">Продовжуй своє навчання у FlashCloud</p>
+        <div class="input-group">
+            <input type="email" id="email" class="input-ans" placeholder="твоя пошта">
+        </div>
+        <div class="input-group">
+            <input type="password" id="pass" class="input-ans" placeholder="пароль">
+        </div>
+        <button class="btn-main" id="auth-submit-btn" onclick="handleAuth()">Увійти</button>
+        <p style="margin-top: 25px; font-size: 0.9rem;">
+            <span id="auth-switch-text">Ще немає акаунта?</span>
+            <a href="#" id="auth-switch-link"
+               style="color: var(--accent-solid); font-weight: 700; text-decoration: none;"
+               onclick="toggleAuthMode()">Створити</a>
+        </p>
+    </div>
+</div>
+
+<!-- FOLDERS SCREEN -->
+<div id="scr-folders" class="screen">
+    <div class="section-header">
+        <div>
+            <h2>Твої модулі</h2>
+            <p>Вибирай модуль, щоб почати</p>
+        </div>
+        <button class="btn-main" style="width:auto; padding:12px 20px; border-radius: 200px;" onclick="uiAddFolder()">+
+            Створити
+        </button>
+    </div>
+    <div id="folders-list" class="item-list"></div>
+</div>
+
+<!-- EDITOR SCREEN -->
+<div id="scr-editor" class="screen">
+    <div class="section-header">
+        <div>
+            <p style="margin-bottom:0;">Редактор модуля</p>
+            <h2 id="editor-title">Слова</h2>
+        </div>
+    </div>
+    <div style="background:var(--surface); padding:20px; border-radius:var(--radius-lg); margin-bottom:25px; border:1px solid var(--border); box-shadow: var(--shadow-card);">
+        <div class="input-group">
+            <input type="text" id="in-w" class="input-ans" placeholder="Термін (напр., Apple)">
+        </div>
+        <div class="input-group">
+            <input type="text" id="in-t" class="input-ans" placeholder="Переклад (напр., Яблуко)">
+        </div>
+        <button class="btn-main secondary" onclick="addCard()">Додати картку</button>
+    </div>
+    <div id="cards-list" class="item-list"></div>
+</div>
+
+<!-- STUDY SCREEN -->
+<div id="scr-study" class="screen">
+    <div id="study-menu">
+        <div class="section-header">
+            <div>
+                <p style="margin-bottom:0;">Навчання</p>
+                <h2 id="study-title">Вибери режим</h2>
+            </div>
+        </div>
+        <div class="side-picker">
+            <div class="side-option active" id="s-term" onclick="setSide('term')">Термін</div>
+            <div class="side-option" id="s-def" onclick="setSide('def')">Переклад</div>
+            <div class="side-option" id="s-rand" onclick="setSide('rand')">Рандом</div>
+        </div>
+        <div class="study-grid">
+            <div class="study-card" onclick="startMode('flip')"><span>🃏</span><b>Картки</b></div>
+            <div class="study-card" onclick="startMode('choice')"><span>🧠</span><b>Вибір</b></div>
+            <div class="study-card" onclick="startMode('write')"><span>⌨️</span><b>Письмо</b></div>
+            <div class="study-card" onclick="startMode('test')"><span>📝</span><b>Тест</b></div>
+        </div>
+    </div>
+    <div id="study-area" style="display:none">
+        <div id="mode-container"></div>
+    </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav id="nav-container" class="nav-bar">
+    <button id="n-folders" class="nav-btn" onclick="nav('folders')"><i>📚</i>Модулі</button>
+    <button id="n-editor" class="nav-btn" onclick="nav('editor')"><i>✏️</i>Слова</button>
+    <button id="n-study" class="nav-btn" onclick="nav('study')"><i>🧠</i>Вчити</button>
+</nav>
+
+<script src="script.js"></script>
+</body>
+</html>

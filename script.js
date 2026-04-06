@@ -15,7 +15,7 @@ const auth = firebase.auth(), db = firebase.firestore();
 let curFid = null, deck = [], studyQueue = [], currentMistakes = [], idx = 0, currentMode = ‘’, side = ‘term’;
 let isLoginMode = true;
 
-// — AUTH LOGIC —
+// — AUTH —
 auth.onAuthStateChanged(user => {
 if (user) {
 document.getElementById(‘nav-container’).style.display = ‘flex’;
@@ -37,19 +37,16 @@ document.getElementById(‘auth-switch-link’).innerText = isLoginMode ? “С�
 }
 
 async function handleAuth() {
-    const e = document.getElementById('email').value.trim(), 
-          p = document.getElementById('pass').value.trim();
-    if (!e || !p) return alert("Заповни всі поля, будь ласка");
-    try {
-        alert("Спроба входу...");
-        if (isLoginMode) await auth.signInWithEmailAndPassword(e, p); 
-        else await auth.createUserWithEmailAndPassword(e, p);
-        alert("Успішно!");
-    } catch (err) { 
-        alert("Помилка: " + err.message); 
-    }
+const e = document.getElementById(‘email’).value.trim();
+const p = document.getElementById(‘pass’).value.trim();
+if (!e || !p) return alert(“Заповни всі поля, будь ласка”);
+try {
+if (isLoginMode) await auth.signInWithEmailAndPassword(e, p);
+else await auth.createUserWithEmailAndPassword(e, p);
+} catch (err) {
+alert(“Помилка: “ + err.message);
 }
-
+}
 
 function logout() { auth.signOut(); }
 
@@ -57,7 +54,8 @@ function logout() { auth.signOut(); }
 async function loadFolders() {
 if (!auth.currentUser) return;
 try {
-const snap = await db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).orderBy(‘createdAt’, ‘asc’).get();
+const snap = await db.collection(‘users’).doc(auth.currentUser.uid)
+.collection(‘folders’).orderBy(‘createdAt’, ‘asc’).get();
 const list = document.getElementById(‘folders-list’);
 list.innerHTML = ‘’;
 if (snap.empty) {
@@ -85,7 +83,8 @@ function uiRenameFolder(fid, old, e) {
 e.stopPropagation();
 const n = prompt(“Нова назва:”, old)?.trim();
 if (n && n !== old) {
-db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(fid).update({name: n}).then(() => setTimeout(loadFolders, 500));
+db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(fid)
+.update({ name: n }).then(() => setTimeout(loadFolders, 500));
 }
 }
 
@@ -111,13 +110,11 @@ if (!curFid || !auth.currentUser) return;
 try {
 const snap = await db.collection(‘users’).doc(auth.currentUser.uid)
 .collection(‘folders’).doc(curFid)
-.collection(‘cards’)
-.orderBy(‘createdAt’, ‘asc’)
-.get();
+.collection(‘cards’).orderBy(‘createdAt’, ‘asc’).get();
 
 ```
     deck = [];
-    snap.forEach(doc => deck.push({id: doc.id, ...doc.data()}));
+    snap.forEach(doc => deck.push({ id: doc.id, ...doc.data() }));
 
     const list = document.getElementById('cards-list');
     list.innerHTML = '';
@@ -161,14 +158,16 @@ loadCards();
 function uiEditCard(id, ot, od) {
 const nt = prompt(“Термін:”, ot)?.trim(), nd = prompt(“Переклад:”, od)?.trim();
 if (nt && nd) {
-db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(curFid).collection(‘cards’).doc(id).update({term: nt, def: nd})
+db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(curFid)
+.collection(‘cards’).doc(id).update({ term: nt, def: nd })
 .then(() => setTimeout(loadCards, 500));
 }
 }
 
 async function uiDeleteCard(id) {
 if (confirm(“Видалити картку?”)) {
-await db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(curFid).collection(‘cards’).doc(id).delete();
+await db.collection(‘users’).doc(auth.currentUser.uid).collection(‘folders’).doc(curFid)
+.collection(‘cards’).doc(id).delete();
 loadCards();
 }
 }
@@ -193,7 +192,7 @@ document.getElementById(id).classList.add(‘active’);
 window.scrollTo(0, 0);
 }
 
-// — STUDY CORE —
+// — STUDY —
 function setSide(s) {
 side = s;
 document.querySelectorAll(’.side-option’).forEach(o => o.classList.remove(‘active’));
@@ -232,16 +231,13 @@ return;
 ```
 const card = studyQueue[idx];
 
-// Визначаємо напрямок: true = питання є term (англійська), відповідь — def (переклад)
 let questionIsTerm;
 if (side === 'term') questionIsTerm = true;
 else if (side === 'def') questionIsTerm = false;
-else questionIsTerm = Math.random() > 0.5; // rand
+else questionIsTerm = Math.random() > 0.5;
 
-const questionText = questionIsTerm ? card.term : card.def;
-const correctAns   = questionIsTerm ? card.def  : card.term;
+const correctAns = questionIsTerm ? card.def : card.term;
 
-// Кнопка озвучки тільки для англійського тексту
 const getVoiceBtn = (text) =>
     `<button class="btn-icon voice-btn"
         onclick="event.stopPropagation(); speak('${text.replace(/'/g, "\\'")}');"
@@ -255,23 +251,21 @@ const backBtn = idx > 0
     ? `<button class="btn-main secondary btn-back" onclick="prevStep()">⬅️</button>`
     : `<div></div>`;
 
-// ── FLIP MODE ──
 if (currentMode === 'flip') {
     const backHTML = questionIsTerm ? card.def : `${card.term}${getVoiceBtn(card.term)}`;
-
     cont.innerHTML = `
         <p style="text-align:center; color:var(--muted)">${idx + 1}/${studyQueue.length}</p>
         <div class="card-scene" id="swipe-zone">
             <div class="card-inner" id="card-obj" onclick="flipCard(event)">
                 <div class="card-face">
                     <div class="card-label">Питання</div>
-                    <div style="font-size:1.5rem; font-weight:bold; padding: 0 15px; display:flex; align-items:center; justify-content:center; height:100%;">
+                    <div style="font-size:1.5rem; font-weight:bold; padding:0 15px; display:flex; align-items:center; justify-content:center; height:100%;">
                         ${questionHTML}
                     </div>
                 </div>
                 <div class="card-back card-face">
                     <div class="card-label">Відповідь</div>
-                    <div style="font-size:1.5rem; font-weight:bold; padding: 0 15px; display:flex; align-items:center; justify-content:center; height:100%;">
+                    <div style="font-size:1.5rem; font-weight:bold; padding:0 15px; display:flex; align-items:center; justify-content:center; height:100%;">
                         ${backHTML}
                     </div>
                 </div>
@@ -280,7 +274,7 @@ if (currentMode === 'flip') {
         <div class="study-controls">
             ${backBtn}
             <div class="flip-btns">
-                <button class="btn-main secondary wrong" onclick="handleFlipResult(false)">❌</button>
+                <button class="btn-main secondary" onclick="handleFlipResult(false)">❌</button>
                 <button class="btn-main" style="background:var(--success)" onclick="handleFlipResult(true)">✅</button>
             </div>
         </div>`;
@@ -288,7 +282,6 @@ if (currentMode === 'flip') {
     return;
 }
 
-// ── WRITE MODE ──
 if (currentMode === 'write') {
     cont.innerHTML = `
         <p style="text-align:center; color:var(--muted)">⌨️ Письмо ${idx + 1}/${studyQueue.length}</p>
@@ -306,12 +299,10 @@ if (currentMode === 'write') {
     return;
 }
 
-// ── CHOICE MODE (було "learn") ──
 if (currentMode === 'choice') {
     const pool = deck.map(d => questionIsTerm ? d.def : d.term);
     const opts = [correctAns, ...pool.filter(v => v !== correctAns).sort(() => 0.5 - Math.random()).slice(0, 3)]
         .sort(() => 0.5 - Math.random());
-
     cont.innerHTML = `
         <p style="text-align:center; color:var(--muted)">🧠 Вибір ${idx + 1}/${studyQueue.length}</p>
         <div style="background:var(--surface); padding:40px 20px; border-radius:var(--radius-lg); text-align:center; margin-bottom:20px;">
@@ -324,10 +315,8 @@ if (currentMode === 'choice') {
     return;
 }
 
-// ── TEST MODE (mix of choice + write) ──
 if (currentMode === 'test') {
     const isWrite = Math.random() > 0.5;
-
     if (isWrite) {
         cont.innerHTML = `
             <p style="text-align:center; color:var(--muted)">📝 ТЕСТ ${idx + 1}/${studyQueue.length}</p>
@@ -346,7 +335,6 @@ if (currentMode === 'test') {
         const pool = deck.map(d => questionIsTerm ? d.def : d.term);
         const opts = [correctAns, ...pool.filter(v => v !== correctAns).sort(() => 0.5 - Math.random()).slice(0, 3)]
             .sort(() => 0.5 - Math.random());
-
         cont.innerHTML = `
             <p style="text-align:center; color:var(--muted)">📝 ТЕСТ ${idx + 1}/${studyQueue.length}</p>
             <div style="background:var(--surface); padding:40px 20px; border-radius:var(--radius-lg); text-align:center; margin-bottom:20px;">
@@ -365,7 +353,6 @@ if (currentMode === 'test') {
 function prevStep() {
 if (idx > 0) {
 idx–;
-// Видаляємо останній запис помилки, якщо він відповідає картці, до якої повертаємось
 const last = currentMistakes[currentMistakes.length - 1];
 if (last && last.id === studyQueue[idx].id) currentMistakes.pop();
 renderStep();
@@ -382,7 +369,6 @@ document.querySelectorAll(’#mode-container button’).forEach(b => {
 if (b.innerText.trim() === cor.replace(/\’/g, “’”)) b.style.backgroundColor = ‘var(–success)’;
 });
 }
-// Блокуємо повторні кліки
 document.querySelectorAll(’#mode-container .btn-main.secondary’).forEach(b => b.disabled = true);
 setTimeout(() => { idx++; renderStep(); }, isCor ? 600 : 1200);
 }
@@ -441,13 +427,11 @@ zone.ontouchend = e => {
     const dX = e.changedTouches[0].clientX - sX;
     const dT = Date.now() - sT;
     card.style.transition = '0.6s';
-
     if (dT < 250 && Math.abs(dX) < 20) {
         e.preventDefault();
         card.classList.toggle('flipped');
         return;
     }
-
     if (Math.abs(dX) > 100) {
         handleFlipResult(dX > 0);
     } else {
@@ -462,6 +446,7 @@ function toggleTheme() {
 document.body.classList.toggle(‘light-theme’);
 localStorage.setItem(‘theme’, document.body.classList.contains(‘light-theme’) ? ‘light’ : ‘dark’);
 }
+
 if (localStorage.getItem(‘theme’) === ‘light’) document.body.classList.add(‘light-theme’);
 
 function flipCard(e) {
